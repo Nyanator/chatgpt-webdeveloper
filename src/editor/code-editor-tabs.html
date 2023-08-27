@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>CodeEditorTabs</title>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+    <link rel="stylesheet" href="./code-editor-tabs.css" />
+  </head>
+  <body>
+    <div class="wrapper">
+      <div class="header">
+        <div class="tab active first" data-kind="language-html">html</div>
+        <div class="tab" data-kind="language-javascript">javascript</div>
+        <div class="tab" data-kind="language-css">css</div>
+        <div class="tab" data-kind="preview">preview</div>
+      </div>
+      <div class="content">
+        <div id="editor-language-html" class="editor active"></div>
+        <div id="editor-language-javascript" class="editor"></div>
+        <div id="editor-language-css" class="editor"></div>
+        <div id="preview" class="preview"></div>
+      </div>
+    </div>
+    <script src="./code-editor-tabs.js"></script>
+  </body>
+</html>
