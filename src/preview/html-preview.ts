@@ -14,7 +14,7 @@ import {
 
 import * as ChatGPTUtils from "../utils/chat-gpt-utils";
 import {
-  KindMessageDataObject,
+  KindMessageData,
   MSG_KIND,
   PREFIEXED_LANGUAGE,
 } from "../utils/message-def";
@@ -24,7 +24,7 @@ import * as HTMLPreviewCreater from "./html-preview-creater";
 // IIFE
 (async () => {
   // コンテキスト間でのメッセージ通信を準備
-  const messageAgent = await createMessageAgent<KindMessageDataObject>({
+  const messageAgent = await createMessageAgent<KindMessageData>({
     runtimeId: chrome.runtime.id,
     allowedOrigins: [ChatGPTUtils.ORIGIN, EXT_ORIGIN],
   });
@@ -70,16 +70,14 @@ import * as HTMLPreviewCreater from "./html-preview-creater";
     reserveObeserve();
 
     // コンテキスト間メッセージリスナーを設定
-    messageAgent.runtimeMessageListener(
-      async (message: KindMessageDataObject) => {
-        if (message.kind === MSG_KIND.UrlUpdated) {
-          codeBlockStarted = false;
-          codeBlockEnded = false;
-          reserveObeserve();
-        }
-        return;
-      },
-    );
+    messageAgent.runtimeMessageListener(async (message: KindMessageData) => {
+      if (message.kind === MSG_KIND.UrlUpdated) {
+        codeBlockStarted = false;
+        codeBlockEnded = false;
+        reserveObeserve();
+      }
+      return;
+    });
   });
 
   /**

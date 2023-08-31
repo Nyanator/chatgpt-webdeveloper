@@ -10,7 +10,7 @@ import {
 
 import * as ChatGPTUtils from "../utils/chat-gpt-utils";
 import {
-  KindMessageDataObject,
+  KindMessageData,
   LANGUAGE_PREFIX,
   MSG_KIND,
   PREFIEXED_LANGUAGE,
@@ -23,7 +23,7 @@ import { Tab } from "./tabs/tab";
 // IIFE
 (async () => {
   // コンテキスト間のメッセージ通信を準備
-  const messageAgent = await createMessageAgent<KindMessageDataObject>({
+  const messageAgent = await createMessageAgent<KindMessageData>({
     runtimeId: chrome.runtime.id,
     allowedOrigins: [ChatGPTUtils.ORIGIN, EXT_ORIGIN],
   });
@@ -76,7 +76,7 @@ import { Tab } from "./tabs/tab";
           tabElement,
           tabContent,
           editors.get(PREFIEXED_LANGUAGE.HTML),
-          editors.get(PREFIEXED_LANGUAGE.JAVASCRIPT),
+          editors.get(PREFIEXED_LANGUAGE.JS),
           editors.get(PREFIEXED_LANGUAGE.CSS),
           messageAgent,
         );

@@ -10,14 +10,13 @@ import interact from "interactjs";
 export const draggableSetting = (
   gripTarget: HTMLElement,
   dragElement: HTMLElement,
-  moveAction: (event: unknown) => void | undefined,
-  endAction: (event: unknown) => void | undefined,
+  moveAction: (event: interact.DragEvent) => void | undefined,
+  endAction: (event: interact.DragEvent) => void | undefined,
 ) => {
   interact(gripTarget).draggable({
     inertia: false,
     listeners: {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      move: (event: any) => {
+      move: (event: interact.DragEvent) => {
         moveAction?.(event);
 
         const target = dragElement;
@@ -27,8 +26,7 @@ export const draggableSetting = (
         target.style.left = `${x}px`;
         target.style.top = `${y}px`;
       },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      end: (event: any) => {
+      end: (event: interact.DragEvent) => {
         endAction?.(event);
       },
     },
@@ -50,14 +48,13 @@ export const draggableSetting = (
  */
 export const resizableSetting = (
   target: HTMLElement,
-  moveAction: (event: unknown) => void | undefined,
-  endAction: (event: unknown) => void | undefined,
+  moveAction: (event: interact.ResizeEvent) => void | undefined,
+  endAction: (event: interact.ResizeEvent) => void | undefined,
 ) => {
   interact(target).resizable({
     edges: { top: true, left: true, bottom: true, right: true },
     listeners: {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      move: (event: any) => {
+      move: (event: interact.ResizeEvent) => {
         moveAction?.(event);
 
         const target = event.target;
@@ -69,8 +66,7 @@ export const resizableSetting = (
         target.style.left = `${rect.x}px`;
         target.style.top = `${rect.y}px`;
       },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      end: (event: any) => {
+      end: (event: interact.event) => {
         endAction?.(event);
       },
     },

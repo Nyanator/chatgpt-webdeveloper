@@ -1,4 +1,4 @@
-import { MessageDataObject } from "@nyanator/chrome-ext-utils";
+import { MessageData } from "@nyanator/chrome-ext-utils";
 
 /** 言語 */
 export const LANGUAGE = {
@@ -14,7 +14,7 @@ export const LANGUAGE_PREFIX = "language-";
 export const PREFIEXED_LANGUAGE = {
   HTML: LANGUAGE_PREFIX + "html",
   CSS: LANGUAGE_PREFIX + "css",
-  JAVASCRIPT: LANGUAGE_PREFIX + "javascript",
+  JS: LANGUAGE_PREFIX + "javascript",
 } as const;
 
 export type PREFIEXED_LANGUAGE =
@@ -37,14 +37,14 @@ export type MSG_KIND = (typeof MSG_KIND)[keyof typeof MSG_KIND];
 export const MSG_SUBKIND = {
   HTML: PREFIEXED_LANGUAGE.HTML,
   CSS: PREFIEXED_LANGUAGE.CSS,
-  JAVASCRIPT: PREFIEXED_LANGUAGE.JAVASCRIPT,
+  JAVASCRIPT: PREFIEXED_LANGUAGE.JS,
   PREVIEW: "preview",
 } as const;
 
 export type MSG_SUBKIND = (typeof MSG_SUBKIND)[keyof typeof MSG_SUBKIND];
 
-/** メッセージオブジェクト */
-export interface KindMessageDataObject extends MessageDataObject {
+/** 種別付きメッセージオブジェクト */
+export interface KindMessageData extends MessageData {
   /**
    * メッセージ種別
    */

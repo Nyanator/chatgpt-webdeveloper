@@ -7,7 +7,7 @@ import {
 
 import * as ChatGPTUtils from "../../utils/chat-gpt-utils";
 import {
-  KindMessageDataObject,
+  KindMessageData,
   MSG_KIND,
   MSG_SUBKIND,
 } from "../../utils/message-def";
@@ -35,7 +35,7 @@ export class PreviewTab extends Tab {
     private readonly htmlTab: MonacoEditorTab | null,
     private readonly javaScriptTab: MonacoEditorTab | null,
     private readonly cssTab: MonacoEditorTab | null,
-    protected readonly messageAgent: MessageAgent<KindMessageDataObject>,
+    protected readonly messageAgent: MessageAgent<KindMessageData>,
   ) {
     super(tabElement, contentElement, messageAgent);
   }

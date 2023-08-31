@@ -1,7 +1,7 @@
 import { MessageAgent } from "@nyanator/chrome-ext-utils";
 
 import * as ChatGPTUtils from "../../utils/chat-gpt-utils";
-import { KindMessageDataObject, MSG_KIND } from "../../utils/message-def";
+import { KindMessageData, MSG_KIND } from "../../utils/message-def";
 
 /** タブがアクティブ状態を示すクラス名 */
 export const ACTIVE = "active";
@@ -19,7 +19,7 @@ export abstract class Tab {
   constructor(
     protected readonly tabElement: HTMLElement,
     protected readonly contentElement: HTMLElement,
-    protected readonly messageAgent: MessageAgent<KindMessageDataObject>,
+    protected readonly messageAgent: MessageAgent<KindMessageData>,
   ) {}
 
   /**

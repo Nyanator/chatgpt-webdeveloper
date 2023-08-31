@@ -1,27 +1,25 @@
 {
-  "manifest_version": 3,
-  "name": "ChatGPTWEBDeveloper",
-  "version": "1.0",
-  "description": "Web Develop Tools for ChatGPT",
-  "permissions": [ "scripting", "tabs", "storage", "clipboardWrite", "alarms"],
   "background": {
-    "matches": [ "https://chat.openai.com/*" ],
+    "matches": ["https://chat.openai.com/*"],
     "service_worker": "background.js"
   },
   "content_scripts": [
     {
-      "matches": [ "https://chat.openai.com/*" ],
-      "js": [ "contents.js" ],
       "all_frames": true,
+      "js": ["content.js"],
+      "matches": ["https://chat.openai.com/*"],
       "run_at": "document_end"
     }
   ],
+  "description": "Web Develop Tools for ChatGPT",
+  "manifest_version": 3,
+  "name": "ChatGPTWEBDeveloper",
+  "permissions": ["scripting", "tabs", "storage", "clipboardWrite", "alarms"],
+  "version": "1.0",
   "web_accessible_resources": [
     {
-      "resources": [
-        "*"
-      ],
-      "matches": [ "https://chat.openai.com/*" ]
+      "matches": ["https://chat.openai.com/*"],
+      "resources": ["*"]
     }
   ]
 }

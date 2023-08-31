@@ -1,26 +1,31 @@
 import {
   DatabaseAgent,
   MessageAgent,
-  MessageDataObject,
+  MessageData,
   assertNotNull,
 } from "@nyanator/chrome-ext-utils";
 
-import { BackgroundScript } from "../interfaces";
+import {
+  BackgroundToContentMessage,
+  ContentToBackgroundMessage,
+} from "interfaces/content-peer-backtround";
 import * as ChatGPTUtils from "../utils/chat-gpt-utils";
-import { KindMessageDataObject, MSG_KIND } from "../utils/message-def";
+import { KindMessageData, MSG_KIND } from "../utils/message-def";
 
 /**
  * ChatGPT WebDeveloperのバックグランドスクリプトです。
  */
-export class ChatGPTWebDeveloperBackgroundScript implements BackgroundScript {
+export class ChatGPTWebDeveloperBackgroundScript {
   /**
    * ChatGPTWebDeveloperBackgroundScript クラスのインスタンスを初期化します。
    * @param databaseAgent 永続化データベースオブジェクト
-   * @param messageAgent コンテキスト間メッセージ通信オブジェクト
+   * @param backToContentMessageAgent コンテキスト間メッセージ通信オブジェクト(バックグラウンド->コンテンツ)
+   * @param contentToBackMessageAgent コンテキスト間メッセージ通信オブジェクト(コンテンツ->バックグラウンド)
    */
   constructor(
     private readonly databaseAgent: DatabaseAgent,
-    private readonly messageAgent: MessageAgent<KindMessageDataObject>,
+    private readonly backToContentMessageAgent: MessageAgent<BackgroundToContentMessage>,
+    private readonly ContentToBackMessageAgent: MessageAgent<ContentToBackgroundMessage>,
   ) {}
 
   /**
@@ -35,19 +40,19 @@ export class ChatGPTWebDeveloperBackgroundScript implements BackgroundScript {
    */
   private addEventListeners() {
     // コンテキスト間メッセージリスナーを設定
-    this.messageAgent.runtimeMessageListener(async (messageData) => {
-      if (messageData.kind === MSG_KIND.ShowHTMLWindow) {
-        return this.showHTMLWindow(messageData);
-      }
-
-      if (messageData.kind === MSG_KIND.Save) {
-        return await this.saveDatabase(messageData);
-      }
-
-      if (messageData.kind === MSG_KIND.Load) {
-        return await this.loadDatabaseData(messageData);
-      }
-    });
+    this.ContentToBackMessageAgent.runtimeMessageListener(
+      async (messageData: ContentToBackgroundMessage) => {
+        // if (messageData.kind === MSG_KIND.ShowHTMLWindow) {
+        //   return this.showHTMLWindow(messageData);
+        // }
+        // if (messageData.kind === MSG_KIND.Save) {
+        //   return await this.saveDatabase(messageData);
+        // }
+        // if (messageData.kind === MSG_KIND.Load) {
+        //   return await this.loadDatabaseData(messageData);
+        // }
+      },
+    );
 
     // URLの変更を監視し、他のコンテキストに通知
     chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
@@ -59,7 +64,7 @@ export class ChatGPTWebDeveloperBackgroundScript implements BackgroundScript {
    * HTMLWindowを表示します。
    * @param messaegData 受信したメッセージ
    */
-  private showHTMLWindow(messageData: MessageDataObject): void {
+  private showHTMLWindow(messageData: MessageData): void {
     chrome.windows.create({
       url:
         "data:text/html;charset=utf-8," +
@@ -74,9 +79,7 @@ export class ChatGPTWebDeveloperBackgroundScript implements BackgroundScript {
    * データベースにデータを保存します。
    * @param messaegData 受信したメッセージ
    */
-  private async saveDatabase(
-    messageData: KindMessageDataObject,
-  ): Promise<void> {
+  private async saveDatabase(messageData: KindMessageData): Promise<void> {
     if (!messageData.subKind) {
       return;
     }
@@ -88,14 +91,11 @@ export class ChatGPTWebDeveloperBackgroundScript implements BackgroundScript {
    * @param messaegData 受信したメッセージ
    */
   private async loadDatabaseData(
-    messageData: KindMessageDataObject,
-  ): Promise<KindMessageDataObject> {
+    messageData: KindMessageData,
+  ): Promise<KindMessageData> {
     const subKind = assertNotNull(messageData.subKind);
-    const result = await this.databaseAgent.get(subKind);
     /* istanbul ignore next */
-    if (typeof result !== "string") {
-      throw new TypeError();
-    }
+    const result = ((await this.databaseAgent.get(subKind)) ?? "") as string;
 
     return {
       runtimeId: chrome.runtime.id,
@@ -125,7 +125,7 @@ export class ChatGPTWebDeveloperBackgroundScript implements BackgroundScript {
       return;
     }
 
-    await this.messageAgent.sendRuntimeMessage(
+    await this.backToContentMessageAgent.sendRuntimeMessage(
       {
         runtimeId: chrome.runtime.id,
         message: "",

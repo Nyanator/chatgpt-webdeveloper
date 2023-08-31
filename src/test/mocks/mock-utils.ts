@@ -1,10 +1,10 @@
 import {
   CryptoAgent,
-  MessageDataObject,
+  MessageData,
   SessionStaticKeyProvider,
   SessionStaticTokenProvider,
 } from "@nyanator/chrome-ext-utils/";
-import { KindMessageDataObject } from "utils/message-def";
+import { KindMessageData } from "utils/message-def";
 
 export const runtimeId = "runtimeId";
 export const invalidRuntimeId = "invalidRuntimeId";
@@ -31,12 +31,12 @@ export const mockMessageAgent = {
   removeRuntimeMessageListener: jest.fn(),
 };
 
-export const mockMessageDataObject = {
+export const mockMessageData = {
   runtimeId: runtimeId,
   message: message,
 };
 
-export const mockInvalidRuntimeIdMessageDataObject = {
+export const mockInvalidRuntimeIdMessageData = {
   runtimeId: invalidRuntimeId,
   message: message,
 };
@@ -72,32 +72,30 @@ export const rawValidMessage = {
   }`,
 };
 
-export const createMockValidMessage = <T extends MessageDataObject>(
+export const createMockValidMessage = <T extends MessageData>(
   cryptoAgent: CryptoAgent<T>,
 ) => {
   return {
     token: token,
-    messageData: cryptoAgent.encrypt(mockMessageDataObject as T),
+    messageData: cryptoAgent.encrypt(mockMessageData as T),
   };
 };
 
-export const createMockInvalidTokenMessage = <T extends MessageDataObject>(
+export const createMockInvalidTokenMessage = <T extends MessageData>(
   cryptoAgent: CryptoAgent<T>,
 ) => {
   return {
     token: invalidToken,
-    messageData: cryptoAgent.encrypt(mockMessageDataObject as T),
+    messageData: cryptoAgent.encrypt(mockMessageData as T),
   };
 };
 
-export const createMockInvalidRuntimeIdMessage = <T extends MessageDataObject>(
+export const createMockInvalidRuntimeIdMessage = <T extends MessageData>(
   cryptoAgent: CryptoAgent<T>,
 ) => {
   return {
     token: token,
-    messageData: cryptoAgent.encrypt(
-      mockInvalidRuntimeIdMessageDataObject as T,
-    ),
+    messageData: cryptoAgent.encrypt(mockInvalidRuntimeIdMessageData as T),
   };
 };
 
@@ -105,7 +103,7 @@ export const createMockKindMessageData = (
   kind: string,
   subKind: string | undefined,
   message: string,
-  cryptoAgent: CryptoAgent<KindMessageDataObject>,
+  cryptoAgent: CryptoAgent<KindMessageData>,
 ) => {
   return {
     token: token,

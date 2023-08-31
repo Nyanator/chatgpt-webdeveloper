@@ -3,7 +3,7 @@ import * as monaco from "monaco-editor";
 
 import * as ChatGPTUtils from "../../utils/chat-gpt-utils";
 import {
-  KindMessageDataObject,
+  KindMessageData,
   LANGUAGE_PREFIX,
   MSG_KIND,
 } from "../../utils/message-def";
@@ -53,7 +53,7 @@ export class MonacoEditorTab extends Tab {
   constructor(
     protected readonly tabElement: HTMLElement,
     protected readonly contentElement: HTMLElement,
-    protected readonly messageAgent: MessageAgent<KindMessageDataObject>,
+    protected readonly messageAgent: MessageAgent<KindMessageData>,
   ) {
     super(tabElement, contentElement, messageAgent);
 

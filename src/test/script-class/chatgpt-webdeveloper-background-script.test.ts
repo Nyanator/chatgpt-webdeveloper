@@ -11,14 +11,14 @@ import "fake-indexeddb/auto";
 
 import { ChatGPTWebDeveloperBackgroundScript } from "../../script-class/chatgpt-webdeveloper-background-script";
 import * as ChatGPTUtils from "../../utils/chat-gpt-utils";
-import { KindMessageDataObject, MSG_KIND } from "../../utils/message-def";
+import { KindMessageData, MSG_KIND } from "../../utils/message-def";
 import * as MockUtils from "../mocks/mock-utils";
 
 describe("ChatGPTWebDeveloperBackgroundScript クラス", () => {
   let databaseAgent: DatabaseAgent;
-  let messageAgent: MessageAgent<KindMessageDataObject>;
+  let messageAgent: MessageAgent<KindMessageData>;
   let scriptInstance: ChatGPTWebDeveloperBackgroundScript;
-  let cryptoAgent: CryptoAgent<KindMessageDataObject>;
+  let cryptoAgent: CryptoAgent<KindMessageData>;
 
   beforeEach(async () => {
     MockUtils.mockAllSessionValues();
@@ -29,16 +29,14 @@ describe("ChatGPTWebDeveloperBackgroundScript クラス", () => {
     );
     await databaseAgent.open();
 
-    cryptoAgent =
-      await MessagingFactories.createCryptoAgent<KindMessageDataObject>();
+    cryptoAgent = await MessagingFactories.createCryptoAgent<KindMessageData>();
     jest
       .spyOn(MessagingFactories, "createCryptoAgent")
       .mockResolvedValue(cryptoAgent);
 
-    messageAgent =
-      await MessagingFactories.createMessageAgent<KindMessageDataObject>(
-        MockUtils.mockValidatorConfig,
-      );
+    messageAgent = await MessagingFactories.createMessageAgent<KindMessageData>(
+      MockUtils.mockValidatorConfig,
+    );
 
     scriptInstance = new ChatGPTWebDeveloperBackgroundScript(
       databaseAgent,
@@ -97,9 +95,9 @@ describe("ChatGPTWebDeveloperBackgroundScript クラス", () => {
       "",
       cryptoAgent,
     );
-    const loadedData: KindMessageDataObject = (await simulateMessage(
+    const loadedData: KindMessageData = (await simulateMessage(
       mockMessageData,
-    )) as KindMessageDataObject;
+    )) as KindMessageData;
 
     expect(loadedData.message).toEqual(mockStoredData);
     expect(loadedData.subKind).toEqual(subKind);
