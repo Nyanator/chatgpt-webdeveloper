@@ -1,22 +1,24 @@
 import * as ChatGPTUtils from "../utils/chat-gpt-utils";
 
-import { EditorMessageSender } from "./editor-message-sender";
+import { ContentToEditorMessageSender } from "./content-to-editor-message-sender";
 
 /**
- * コンテンツスクリプトのウィンドウメッセージを実装します。
+ * コンテンツスクリプトのイベントリスナーを実装します。
  */
-export class ContentWindowMessageListener {
+export class ContentEventListener {
     /**
-     * ContentWindowMessageListenerのインスタンスを初期化します
-     * @param editorMessageSender エディターへのメッセージ送信オブジェクト
+     * ContentEventListenerのインスタンスを初期化します
+     * @param contentToTditorMessageSender エディターへのメッセージ送信オブジェクト
      */
-    constructor(private readonly editorMessageSender: EditorMessageSender) {}
+    constructor(
+        private readonly contentToTditorMessageSender: ContentToEditorMessageSender,
+    ) {}
 
     /**
      * メッセージリスナーを開始します。
      */
     startListening(): void {
-        document.addEventListener("click", this.handleWindowClick);
+        document.addEventListener("click", this.handleWindowClick.bind(this));
     }
 
     /**
@@ -41,7 +43,7 @@ export class ContentWindowMessageListener {
             return;
         }
 
-        this.editorMessageSender.postTabUpdateRequest({
+        this.contentToTditorMessageSender.postTabUpdateRequest({
             subKey: languageClass,
             message: codeElement.textContent ?? "",
         });

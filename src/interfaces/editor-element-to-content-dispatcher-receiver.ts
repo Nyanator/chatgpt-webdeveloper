@@ -1,23 +1,23 @@
 import { CrossDispatcher, assertNotNull } from "@nyanator/chrome-ext-utils";
 
-import { BackgroundMessageSender } from "./background-message-sender";
 import { ContentScriptChannel } from "./content-peer-content";
-import { EditorMessageSender } from "./editor-message-sender";
+import { ContentToBackgroundMessageSender } from "./content-to-background-message-sender";
+import { ContentToEditorMessageSender } from "./content-to-editor-message-sender";
 
 /**
- * エディターエレメントからのディスパッチ受信を実装します。
+ * エディターエレメント->コンテンツのディスパッチ受信を実装します。
  */
-export class EditorElementDispathcerReceiver {
+export class EditorElementToContentDispathcerReceiver {
     /**
-     * EditorElementDispathcerSenderのインスタンスを初期化します。
+     * EditorElementToContentDispathcerReceiverのインスタンスを初期化します。
      * @param editorElementDispathcer エディターエレメントとのメッセージディスパッチャー
-     * @param editorMessageSender エディターへのメッセージ送信オブジェクト
-     * @param backgroundMessageSender バックグラウンドへのメッセージ送信オブジェクト
+     * @param contentToEditorMessageSender エディターへのメッセージ送信オブジェクト
+     * @param contentToBackgroundMessageSender バックグラウンドへのメッセージ送信オブジェクト
      */
     constructor(
         private readonly editorElementDispathcer: CrossDispatcher<ContentScriptChannel>,
-        private readonly editorMessageSender: EditorMessageSender,
-        private readonly backgroundMessageSender: BackgroundMessageSender,
+        private readonly contentToEditorMessageSender: ContentToEditorMessageSender,
+        private readonly contentToBackgroundMessageSender: ContentToBackgroundMessageSender,
     ) {}
 
     /**
@@ -25,8 +25,8 @@ export class EditorElementDispathcerReceiver {
      */
     startChannel(): void {
         this.editorElementDispathcer.channel({
-            ClipboardSaveRequest: this.handleClipboardSaveRequest,
-            LoadDataRequest: this.handleLoadDataRequest,
+            ClipboardSaveRequest: this.handleClipboardSaveRequest.bind(this),
+            LoadDataRequest: this.handleLoadDataRequest.bind(this),
         });
     }
 
@@ -41,7 +41,7 @@ export class EditorElementDispathcerReceiver {
      * クリップボード保存要求のハンドラー
      */
     private handleClipboardSaveRequest = (): void => {
-        this.editorMessageSender.postClipboardSaveRequest();
+        this.contentToEditorMessageSender.postClipboardSaveRequest();
     };
 
     /**
@@ -49,10 +49,10 @@ export class EditorElementDispathcerReceiver {
      */
     private handleLoadDataRequest = async (subKey: string): Promise<void> => {
         const loadData =
-            await this.backgroundMessageSender.loadDataRequest(subKey);
+            await this.contentToBackgroundMessageSender.loadDataRequest(subKey);
 
         if (loadData) {
-            this.editorMessageSender.postLoadedData({
+            this.contentToEditorMessageSender.postLoadedData({
                 subKey: assertNotNull(loadData.subKey),
                 message: loadData.message,
             });

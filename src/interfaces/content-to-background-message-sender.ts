@@ -8,9 +8,9 @@ import {
 } from "./content-peer-background";
 
 /**
- * バックグランドへのリクエストを実装します。
+ * コンテンツ->バックグランドへのリクエストを実装します。
  */
-export class BackgroundMessageSender {
+export class ContentToBackgroundMessageSender {
     /**
      * BackgroundMessageSenderのインスタンスを初期化します。
      * @param backgroundMessageAgent バックグランドとの通信に使うエージェント
@@ -28,7 +28,7 @@ export class BackgroundMessageSender {
         subKey: string;
         message: string;
     }): Promise<void> {
-        await this.send({
+        this.send({
             key: MSG_KEY_CB.SaveDataRequest,
             subKey: arg.subKey,
             message: arg.message,
@@ -44,7 +44,7 @@ export class BackgroundMessageSender {
     async loadDataRequest(
         subKey: string,
     ): Promise<ContentPeerBackgroundMessage | void> {
-        return await this.send({
+        return this.send({
             key: MSG_KEY_CB.LoadDataRequest,
             subKey: subKey,
             message: "",
@@ -66,7 +66,7 @@ export class BackgroundMessageSender {
         message: string;
         alertMessage: ALERT_MESSAGE_NAME;
     }): Promise<ContentPeerBackgroundMessage | void> {
-        return await handleAlertAction(async () => {
+        return handleAlertAction(async () => {
             return await this.backgroundMessageAgent.sendMessage({
                 message: {
                     runtimeId: chrome.runtime.id,

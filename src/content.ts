@@ -14,19 +14,14 @@ import {
 import "./preview/html-preview";
 
 import { initializeEditorElement } from "./editor/editor-element";
-import { BackgroundMessageSender } from "./interfaces/background-message-sender";
+import { ContentEventListener } from "./interfaces/content-event-listener";
 import { ContentScriptChannel } from "./interfaces/content-peer-content";
-import { ContentWindowMessageListener } from "./interfaces/content-window-message-listener";
-import { EditorElementDispathcerReceiver } from "./interfaces/editor-element-dispatcher-receiver";
-import { EditorElementDispathcerSender } from "./interfaces/editor-element-dispatcher-sender";
-import { EditorMessageReceiver } from "./interfaces/editor-message-reciever";
-import { EditorMessageSender } from "./interfaces/editor-message-sender";
+import { ContentToBackgroundMessageSender } from "./interfaces/content-to-background-message-sender";
+import { ContentToEditorElementDispathcerSender } from "./interfaces/content-to-editor-element-dispatcher-sender";
+import { ContentToEditorMessageSender } from "./interfaces/content-to-editor-message-sender";
+import { EditorElementToContentDispathcerReceiver } from "./interfaces/editor-element-to-content-dispatcher-receiver";
+import { EditorToContentMessageReceiver } from "./interfaces/editor-to-content-message-receiver";
 import * as ChatGPTUtils from "./utils/chat-gpt-utils";
-
-reserveLoadedAction(document, async () => {
-    const contentScript = new ContentScript();
-    contentScript.initialize();
-});
 
 export class ContentScript {
     /**
@@ -50,21 +45,23 @@ export class ContentScript {
                 strictMode: true,
             });
 
-        // エディターエレメントへのディスパッチャーの実装
-        const editorElementDispathcerSender = new EditorElementDispathcerSender(
-            contentPeerEditorCrossDispather,
-        );
+        // コンテンツ->エディターエレメントのディスパッチャー送信実装
+        const contentToEditorElementDispathcerSender =
+            new ContentToEditorElementDispathcerSender(
+                contentPeerEditorCrossDispather,
+            );
 
-        // バックグラウンドへの送信実装
-        const backgroundMessageSender = new BackgroundMessageSender(
-            contentPeerBackgroundMessageAgent,
-        );
+        // コンテンツ->バックグラウンドへの送信実装
+        const contentToBackgroundMessageSender =
+            new ContentToBackgroundMessageSender(
+                contentPeerBackgroundMessageAgent,
+            );
 
-        // エディターからのメッセージ受信実装
-        const editorMessageReceiver = new EditorMessageReceiver(
+        // エディター->コンテンツのメッセージ受信実装
+        const editorMessageReceiver = new EditorToContentMessageReceiver(
             contentPeerEditorFrameMessageAgent,
-            backgroundMessageSender,
-            editorElementDispathcerSender,
+            contentToBackgroundMessageSender,
+            contentToEditorElementDispathcerSender,
         );
         editorMessageReceiver.startListening();
 
@@ -74,26 +71,26 @@ export class ContentScript {
             crossDispathcer: contentPeerEditorCrossDispather,
         });
 
-        // エディターへのメッセージ送信実装
-        const editorMessageSender = new EditorMessageSender(
+        // コンテンツ->エディターのメッセージ送信実装
+        const contentToEditorMessageSender = new ContentToEditorMessageSender(
             contentPeerEditorFrameMessageAgent,
             editorElements.editor,
         );
 
-        // エディターエレメントからのディスパッチャーの実装
-        const editorElementDispathcerReceiver =
-            new EditorElementDispathcerReceiver(
+        // エディターエレメント->コンテンツのディスパッチャー受信実装
+        const editorElementToContentDispathcerReceiver =
+            new EditorElementToContentDispathcerReceiver(
                 contentPeerEditorCrossDispather,
-                editorMessageSender,
-                backgroundMessageSender,
+                contentToEditorMessageSender,
+                contentToBackgroundMessageSender,
             );
-        editorElementDispathcerReceiver.startChannel();
+        editorElementToContentDispathcerReceiver.startChannel();
 
-        // コンテンツスクリプトのメッセージリスナーの実装
-        const contentWindowMessageListener = new ContentWindowMessageListener(
-            editorMessageSender,
+        // コンテンツスクリプトのイベントリスナー実装
+        const contentEventListener = new ContentEventListener(
+            contentToEditorMessageSender,
         );
-        contentWindowMessageListener.startListening();
+        contentEventListener.startListening();
     }
 
     /**
@@ -111,3 +108,8 @@ export class ContentScript {
         });
     }
 }
+
+reserveLoadedAction(document, async () => {
+    const contentScript = new ContentScript();
+    contentScript.initialize();
+});
