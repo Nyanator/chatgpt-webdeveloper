@@ -9,11 +9,11 @@ import { ALERT_MESSAGE_NAME, handleAlertAction } from "../utils/handle-error";
 import { ContentPeerEditorMessage, MSG_KEY_CE } from "./content-peer-editor";
 
 /**
- * エディターへのリクエストを実装します。
+ * コンテンツ->エディターへのリクエストを実装します。
  */
-export class EditorMessageSender {
+export class ContentToEditorMessageSender {
     /**
-     * EditorMessageSenderのインスタンスを初期化します。
+     * ContentToEditorMessageSenderのインスタンスを初期化します。
      * @param editorMessageAgent エディターとの通信に使うエージェント
      * @param editorFrame 送信先のエディターフレーム
      */
@@ -26,7 +26,7 @@ export class EditorMessageSender {
      * クリップボードの保存要求を送信します。
      */
     async postClipboardSaveRequest(): Promise<void> {
-        await this.post({
+        this.post({
             key: MSG_KEY_CE.ClipboardSaveRequest,
             subKey: undefined,
             message: "",
@@ -43,7 +43,7 @@ export class EditorMessageSender {
         subKey: string;
         message: string;
     }): Promise<void> {
-        await this.post({
+        this.post({
             key: MSG_KEY_CE.TabUpdateRequest,
             subKey: arg.subKey,
             message: arg.message,
@@ -60,7 +60,7 @@ export class EditorMessageSender {
         subKey: string;
         message: string;
     }): Promise<void> {
-        await this.post({
+        this.post({
             key: MSG_KEY_CE.ReplyLoadedData,
             subKey: arg.subKey,
             message: arg.message,

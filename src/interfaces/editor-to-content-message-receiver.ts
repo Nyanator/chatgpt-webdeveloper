@@ -2,31 +2,33 @@ import { WindowMessageAgent, assertNotNull } from "@nyanator/chrome-ext-utils";
 
 import { ALERT_MESSAGE_NAME, handleAlertAction } from "../utils/handle-error";
 
-import { BackgroundMessageSender } from "./background-message-sender";
 import { ContentPeerEditorMessage, MSG_KEY_EC } from "./content-peer-editor";
-import { EditorElementDispathcerSender } from "./editor-element-dispatcher-sender";
+import { ContentToBackgroundMessageSender } from "./content-to-background-message-sender";
+import { ContentToEditorElementDispathcerSender } from "./content-to-editor-element-dispatcher-sender";
 
 /**
- * エディターからのメッセージ受信を実装します。
+ * エディター->コンテンツのメッセージ受信を実装します。
  */
-export class EditorMessageReceiver {
+export class EditorToContentMessageReceiver {
     /**
-     * EditorMessageReceiverのインスタンスを初期化します。
+     * EditorToContentMessageReceiverのインスタンスを初期化します。
      * @param editorMessageAgent エディターからのメッセージ受信エージェント
-     * @param backgroundMessageSender バックラウンドへの送信オブジェクト
+     * @param contentToBackgroundMessageSender バックラウンドへの送信オブジェクト
      * @param editorElementDispathcerSender エディターエレメントへのメッセージディスパッチャー
      */
     constructor(
         private readonly editorMessageAgent: WindowMessageAgent<ContentPeerEditorMessage>,
-        private readonly backgroundMessageSender: BackgroundMessageSender,
-        private readonly editorElementDispathcerSender: EditorElementDispathcerSender,
+        private readonly contentToBackgroundMessageSender: ContentToBackgroundMessageSender,
+        private readonly contentToEditorElementDispathcerSender: ContentToEditorElementDispathcerSender,
     ) {}
 
     /**
      * メッセージ受信を開始します。
      */
     startListening(): void {
-        this.editorMessageAgent.addListener(this.handleEditorMessage);
+        this.editorMessageAgent.addListener(
+            this.handleEditorMessage.bind(this),
+        );
     }
 
     /**
@@ -49,7 +51,7 @@ export class EditorMessageReceiver {
             case MSG_KEY_EC.SaveDataRequest:
                 return this.handleSaveDataRequest(messageData);
             case MSG_KEY_EC.TabChangedEvent:
-                this.editorElementDispathcerSender.dispatchTabChangedEvent(
+                this.contentToEditorElementDispathcerSender.dispatchTabChangedEvent(
                     messageData,
                 );
                 return;
@@ -76,6 +78,9 @@ export class EditorMessageReceiver {
     private handleSaveDataRequest(messageData: ContentPeerEditorMessage): void {
         const subKey = assertNotNull(messageData.subKey);
         const message = messageData.message;
-        this.backgroundMessageSender.saveDataRequest({ subKey, message });
+        this.contentToBackgroundMessageSender.saveDataRequest({
+            subKey,
+            message,
+        });
     }
 }

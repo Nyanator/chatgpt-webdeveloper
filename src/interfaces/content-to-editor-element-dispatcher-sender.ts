@@ -6,11 +6,11 @@ import { ContentScriptChannel } from "./content-peer-content";
 import { ContentPeerEditorMessage } from "./content-peer-editor";
 
 /**
- * エディターエレメントへのディスパッチ送信を実装します。
+ * コンテンツ->エディターエレメントへのディスパッチ送信を実装します。
  */
-export class EditorElementDispathcerSender {
+export class ContentToEditorElementDispathcerSender {
     /**
-     * EditorElementDispathcerSenderのインスタンスを初期化します。
+     * ContentToEditorElementDispathcerSenderのインスタンスを初期化します。
      * @param editorElementDispathcer エディターエレメントとのメッセージディスパッチャー
      */
     constructor(
