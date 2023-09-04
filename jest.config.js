@@ -22,4 +22,5 @@ module.exports = {
         url: "http://localhost/",
     },
     setupFilesAfterEnv: ["./jest.setup.js"],
+    setupFiles: ["reflect-metadata"],
 };

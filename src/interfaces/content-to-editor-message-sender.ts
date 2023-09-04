@@ -6,11 +6,13 @@ import {
 
 import { ALERT_MESSAGE_NAME, handleAlertAction } from "../utils/handle-error";
 
+import { inject, injectable } from "tsyringe";
 import { ContentPeerEditorMessage, MSG_KEY_CE } from "./content-peer-editor";
 
 /**
  * コンテンツ->エディターへのリクエストを実装します。
  */
+@injectable()
 export class ContentToEditorMessageSender {
     /**
      * ContentToEditorMessageSenderのインスタンスを初期化します。
@@ -18,6 +20,7 @@ export class ContentToEditorMessageSender {
      * @param editorFrame 送信先のエディターフレーム
      */
     constructor(
+        @inject("WindowMessageAgent")
         private readonly editorMessageAgent: WindowMessageAgent<ContentPeerEditorMessage>,
         private readonly editorFrame: HTMLIFrameElement,
     ) {}

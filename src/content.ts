@@ -4,93 +4,96 @@
  * DOMへのアクセスはウェブページに挿入されるコンテンツスクリプトが担います。
  */
 import {
-    CrossDispatcher,
+    AESCryptoAgent,
+    ConsoleLogger,
+    CryptoAgent,
+    EXT_ORIGIN,
+    MessageData,
+    MessageValidatorImpl,
+    MessageValidatorManager,
+    MessageValidatorManagerConfig,
+    MessageValidatorManagerImpl,
+    RuntimeMessageAgent,
+    RuntimeMessageAgentImpl,
+    SessionStaticKey,
+    SessionStaticToken,
+    WindowMessageAgent,
+    WindowMessageAgentImpl,
     appendElementToHead,
     htmlTextToHtmlElement,
     loadResourceText,
-    reserveLoadedAction,
 } from "@nyanator/chrome-ext-utils";
 
-import "./preview/html-preview";
-
-import { initializeEditorElement } from "./editor/editor-element";
-import { ContentEventListener } from "./interfaces/content-event-listener";
-import { ContentScriptChannel } from "./interfaces/content-peer-content";
-import { ContentToBackgroundMessageSender } from "./interfaces/content-to-background-message-sender";
-import { ContentToEditorElementDispathcerSender } from "./interfaces/content-to-editor-element-dispatcher-sender";
+import { container } from "tsyringe";
+//import "./preview/html-preview";
 import { ContentToEditorMessageSender } from "./interfaces/content-to-editor-message-sender";
-import { EditorElementToContentDispathcerReceiver } from "./interfaces/editor-element-to-content-dispatcher-receiver";
-import { EditorToContentMessageReceiver } from "./interfaces/editor-to-content-message-receiver";
-import * as ChatGPTUtils from "./utils/chat-gpt-utils";
+import { ORIGIN } from "./utils/chat-gpt-utils";
 
 export class ContentScript {
     /**
      * コンテンツスクリプトを初期化します。
      */
     async initialize(): Promise<void> {
-        // スタイルとリンクの適用
-        this.appendLinkAndStyles();
-
-        // エディターとの通信エージェント
-        const contentPeerEditorFrameMessageAgent =
-            await ChatGPTUtils.createWindowMessageAgent();
-
-        // バックグランドとの通信エージェント
-        const contentPeerBackgroundMessageAgent =
-            await ChatGPTUtils.createRuntimeMessageAgent();
-
-        // エディターエレメントへのディスパッチャー
-        const contentPeerEditorCrossDispather =
-            CrossDispatcher<ContentScriptChannel>({
-                strictMode: true,
-            });
-
-        // コンテンツ->エディターエレメントのディスパッチャー送信実装
-        const contentToEditorElementDispathcerSender =
-            new ContentToEditorElementDispathcerSender(
-                contentPeerEditorCrossDispather,
-            );
-
-        // コンテンツ->バックグラウンドへの送信実装
-        const contentToBackgroundMessageSender =
-            new ContentToBackgroundMessageSender(
-                contentPeerBackgroundMessageAgent,
-            );
-
-        // エディター->コンテンツのメッセージ受信実装
-        const editorMessageReceiver = new EditorToContentMessageReceiver(
-            contentPeerEditorFrameMessageAgent,
-            contentToBackgroundMessageSender,
-            contentToEditorElementDispathcerSender,
-        );
-        editorMessageReceiver.startListening();
-
-        // エディターエレメントの初期化
-        const editorElements = await initializeEditorElement({
-            parentElement: document.documentElement,
-            crossDispathcer: contentPeerEditorCrossDispather,
+        container.register("Logger", {
+            useClass: ConsoleLogger,
         });
 
-        // コンテンツ->エディターのメッセージ送信実装
-        const contentToEditorMessageSender = new ContentToEditorMessageSender(
-            contentPeerEditorFrameMessageAgent,
-            editorElements.editor,
+        container.register("SessionStaticToken", {
+            useClass: SessionStaticToken,
+        });
+
+        container.register("SessionStaticKey", {
+            useClass: SessionStaticKey,
+        });
+
+        container.register("MessageValidatorConfig", {
+            useValue: {
+                runtimeId: chrome.runtime.id,
+                allowedOrigins: [ORIGIN, EXT_ORIGIN],
+            },
+        });
+
+        container.register<CryptoAgent<MessageData>>("CryptoAgent", {
+            useClass: AESCryptoAgent<MessageData>,
+        });
+
+        container.register<MessageValidatorImpl<MessageData>>(
+            "MessageValidator",
+            {
+                useClass: MessageValidatorImpl<MessageData>,
+            },
         );
 
-        // エディターエレメント->コンテンツのディスパッチャー受信実装
-        const editorElementToContentDispathcerReceiver =
-            new EditorElementToContentDispathcerReceiver(
-                contentPeerEditorCrossDispather,
-                contentToEditorMessageSender,
-                contentToBackgroundMessageSender,
-            );
-        editorElementToContentDispathcerReceiver.startChannel();
-
-        // コンテンツスクリプトのイベントリスナー実装
-        const contentEventListener = new ContentEventListener(
-            contentToEditorMessageSender,
+        container.register<MessageValidatorManagerConfig>(
+            "MessageValidatorManagerConfig",
+            {
+                useValue: {
+                    maxMessageValidators: 3,
+                    validatorRefreshInterval: 1,
+                },
+            },
         );
-        contentEventListener.startListening();
+
+        container.register<RuntimeMessageAgent<MessageData>>(
+            "RuntimeMessageAgent",
+            {
+                useClass: RuntimeMessageAgentImpl,
+            },
+        );
+
+        container.registerSingleton<MessageValidatorManager<MessageData>>(
+            "MessageValidatorManager",
+            MessageValidatorManagerImpl<MessageData>,
+        );
+
+        container.register<WindowMessageAgent<MessageData>>(
+            "WindowMessageAgent",
+            {
+                useClass: WindowMessageAgentImpl,
+            },
+        );
+
+        const test = container.resolve(ContentToEditorMessageSender);
     }
 
     /**
@@ -109,7 +112,7 @@ export class ContentScript {
     }
 }
 
-reserveLoadedAction(document, async () => {
-    const contentScript = new ContentScript();
-    contentScript.initialize();
-});
+// reserveLoadedAction(document, async () => {
+//     const contentScript = new ContentScript();
+//     contentScript.initialize();
+// });

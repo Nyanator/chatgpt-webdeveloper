@@ -1,13 +1,8 @@
 import {
-    EXT_ORIGIN,
-    RuntimeMessageAgent,
-    WindowMessageAgent,
     findMatchParent,
     findParentPreElement,
     waitForAction,
 } from "@nyanator/chrome-ext-utils";
-import { ContentPeerBackgroundMessage } from "interfaces/content-peer-background";
-import { ContentPeerEditorMessage } from "interfaces/content-peer-editor";
 
 import { LANGUAGE_PREFIX } from "./language-def";
 
@@ -111,34 +106,34 @@ export const extractLanguageClass = (element: Element): string => {
     return languageClasses[0] || "";
 };
 
-/**
- * バックグラウンドスクリプトとの通信に使うエージェントを初期化します。
- */
-export const createRuntimeMessageAgent = async (): Promise<
-    RuntimeMessageAgent<ContentPeerBackgroundMessage>
-> => {
-    return RuntimeMessageAgent<ContentPeerBackgroundMessage>({
-        messageValidatorManagerConfig: {
-            messageValidatorConfig: {
-                runtimeId: chrome.runtime.id,
-                allowedOrigins: [ORIGIN, EXT_ORIGIN],
-            },
-        },
-    });
-};
+// /**
+//  * バックグラウンドスクリプトとの通信に使うエージェントを初期化します。
+//  */
+// export const createRuntimeMessageAgent = async (): Promise<
+//     RuntimeMessageAgent<ContentPeerBackgroundMessage>
+// > => {
+//     return RuntimeMessageAgent<ContentPeerBackgroundMessage>({
+//         messageValidatorManagerConfig: {
+//             messageValidatorConfig: {
+//                 runtimeId: chrome.runtime.id,
+//                 allowedOrigins: [ORIGIN, EXT_ORIGIN],
+//             },
+//         },
+//     });
+// };
 
-/**
- * エディターとの通信に使うエージェントを初期化します。
- */
-export const createWindowMessageAgent = async (): Promise<
-    WindowMessageAgent<ContentPeerEditorMessage>
-> => {
-    return WindowMessageAgent<ContentPeerEditorMessage>({
-        messageValidatorManagerConfig: {
-            messageValidatorConfig: {
-                runtimeId: chrome.runtime.id,
-                allowedOrigins: [ORIGIN, EXT_ORIGIN],
-            },
-        },
-    });
-};
+// /**
+//  * エディターとの通信に使うエージェントを初期化します。
+//  */
+// export const createWindowMessageAgent = async (): Promise<
+//     WindowMessageAgent<ContentPeerEditorMessage>
+// > => {
+//     return WindowMessageAgent<ContentPeerEditorMessage>({
+//         messageValidatorManagerConfig: {
+//             messageValidatorConfig: {
+//                 runtimeId: chrome.runtime.id,
+//                 allowedOrigins: [ORIGIN, EXT_ORIGIN],
+//             },
+//         },
+//     });
+// };
