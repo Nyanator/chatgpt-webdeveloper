@@ -13,14 +13,14 @@ const swcrc = JSON.parse(fs.readFileSync(".swcrc", "utf8"));
 
 // eslint-disable-next-line no-undef
 module.exports = {
-    testEnvironment: "jsdom",
-    moduleFileExtensions: ["ts", "js"],
-    transform: {
-        "^.+\\.(ts)$": ["@swc/jest", swcrc],
-    },
-    testEnvironmentOptions: {
-        url: "http://localhost/",
-    },
-    setupFilesAfterEnv: ["./jest.setup.js"],
-    setupFiles: ["reflect-metadata"],
+  testEnvironment: "jsdom",
+  moduleFileExtensions: ["ts", "js"],
+  transform: {
+    "^.+\\.(ts)$": ["@swc/jest", swcrc],
+  },
+  testEnvironmentOptions: {
+    url: "http://localhost/",
+  },
+  setupFilesAfterEnv: ["./jest.setup.js"],
+  setupFiles: ["reflect-metadata"],
 };

@@ -10,13 +10,13 @@ import interact from "interactjs";
 export const draggableSetting = (
   gripTarget: HTMLElement,
   dragElement: HTMLElement,
-  moveAction: (event: interact.DragEvent) => void | undefined,
-  endAction: (event: interact.DragEvent) => void | undefined,
+  moveAction: (event: Interact.DragEvent) => void | undefined,
+  endAction: (event: Interact.DragEvent) => void | undefined,
 ) => {
   interact(gripTarget).draggable({
     inertia: false,
     listeners: {
-      move: (event: interact.DragEvent) => {
+      move: (event: Interact.DragEvent) => {
         moveAction?.(event);
 
         const target = dragElement;
@@ -26,7 +26,7 @@ export const draggableSetting = (
         target.style.left = `${x}px`;
         target.style.top = `${y}px`;
       },
-      end: (event: interact.DragEvent) => {
+      end: (event: Interact.DragEvent) => {
         endAction?.(event);
       },
     },
@@ -48,25 +48,25 @@ export const draggableSetting = (
  */
 export const resizableSetting = (
   target: HTMLElement,
-  moveAction: (event: interact.ResizeEvent) => void | undefined,
-  endAction: (event: interact.ResizeEvent) => void | undefined,
+  moveAction: (event: Interact.ResizeEvent) => void | undefined,
+  endAction: (event: Interact.ResizeEvent) => void | undefined,
 ) => {
   interact(target).resizable({
     edges: { top: true, left: true, bottom: true, right: true },
     listeners: {
-      move: (event: interact.ResizeEvent) => {
+      move: (event: Interact.ResizeEvent) => {
         moveAction?.(event);
 
         const target = event.target;
         const rect = target.getBoundingClientRect();
         target.style.width = `${event.rect.width}px`;
         target.style.height = `${event.rect.height}px`;
-        rect.x += event.deltaRect.left;
-        rect.y += event.deltaRect.top;
+        rect.x += event.deltaRect?.left ?? 0;
+        rect.y += event.deltaRect?.top ?? 0;
         target.style.left = `${rect.x}px`;
         target.style.top = `${rect.y}px`;
       },
-      end: (event: interact.event) => {
+      end: (event: Interact.ResizeEvent) => {
         endAction?.(event);
       },
     },

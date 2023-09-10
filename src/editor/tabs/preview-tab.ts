@@ -1,15 +1,13 @@
 import {
-    WindowMessageAgent,
-    appendScriptText,
-    appendStyleTextToHead,
-    htmlTextToHtmlElement,
+  AlertNamedError,
+  WindowMessageAgent,
+  appendScriptText,
+  appendStyleTextToHead,
+  htmlTextToHtmlElement,
 } from "@nyanator/chrome-ext-utils";
 
-import {
-    ContentPeerEditorMessage,
-    MSG_KEY_EC,
-} from "../../interfaces/content-peer-editor";
 import * as ChatGPTUtils from "../../utils/chat-gpt-utils";
+import { MSG_CHANNEL, PREFIEXED_LANGUAGE } from "../../utils/msg-def";
 
 import { MonacoEditorTab } from "./monaco-editor-tab";
 import { Tab } from "./tab";
@@ -19,68 +17,59 @@ import { Tab } from "./tab";
  *
  */
 export class PreviewTab extends Tab {
-    /**
-     * PreviewTab インスタンスを生成します。
-     * @param tabElement タブの HTML 要素
-     * @param contentElement タブのコンテンツの HTML 要素
-     * @param htmlTab HTML エディタータブのインスタンス、または null
-     * @param javaScriptTab JavaScript エディタータブのインスタンス、または null
-     * @param cssTab CSS エディタータブのインスタンス、または null
-     * @param messageAgent メッセージ送受信を管理する MessageAgent インスタンス
-     */
-    constructor(
-        protected readonly tabElement: HTMLElement,
-        protected readonly contentElement: HTMLElement,
-        private readonly htmlTab: MonacoEditorTab | null,
-        private readonly javaScriptTab: MonacoEditorTab | null,
-        private readonly cssTab: MonacoEditorTab | null,
-        protected readonly messageAgent: WindowMessageAgent<ContentPeerEditorMessage>,
-    ) {
-        super(tabElement, contentElement, messageAgent);
-    }
+  constructor(
+    protected readonly tabElement: HTMLElement,
+    protected readonly contentElement: HTMLElement,
+    private readonly htmlTab: MonacoEditorTab | null,
+    private readonly javaScriptTab: MonacoEditorTab | null,
+    private readonly cssTab: MonacoEditorTab | null,
+    protected readonly messageAgent: WindowMessageAgent,
+  ) {
+    super(tabElement, contentElement, messageAgent);
+  }
 
-    /**
-     * プレビュータブの現在のコードを取得します。
-     * @returns プレビュータブの現在のコード
-     */
-    getValue(): string {
-        const html = this.htmlTab?.getValue() ?? "";
-        const javaScript = this.javaScriptTab?.getValue() ?? "";
-        const css = this.cssTab?.getValue() ?? "";
+  /**
+   * プレビュータブの現在のコードを取得します。
+   * @returns プレビュータブの現在のコード
+   */
+  getValue(): string {
+    const html = this.htmlTab?.getValue() ?? "";
+    const javaScript = this.javaScriptTab?.getValue() ?? "";
+    const css = this.cssTab?.getValue() ?? "";
 
-        const htmlElement = htmlTextToHtmlElement(html);
-        appendStyleTextToHead(htmlElement, css);
-        // スクリプトは末尾に配置される
-        appendScriptText(htmlElement, javaScript);
-        return htmlElement.outerHTML;
-    }
+    const htmlElement = htmlTextToHtmlElement(html);
+    appendStyleTextToHead(htmlElement, css);
+    // スクリプトは末尾に配置される
+    appendScriptText(htmlElement, javaScript);
+    return htmlElement.outerHTML;
+  }
 
-    /**
-     * プレビュータブのコードを設定します。
-     * @param value 設定するコード
-     */
-    setValue(value: string) {
-        const htmlElement = htmlTextToHtmlElement(value);
-        this.htmlTab?.setValue(htmlElement.outerHTML);
-        this.javaScriptTab?.setValue("");
-        this.cssTab?.setValue("");
-    }
+  /**
+   * プレビュータブのコードを設定します。
+   * @param value 設定するコード
+   */
+  setValue(value: string): void {
+    const htmlElement = htmlTextToHtmlElement(value);
+    this.htmlTab?.setValue(htmlElement.outerHTML);
+    this.javaScriptTab?.setValue("");
+    this.cssTab?.setValue("");
+  }
 
-    /**
-     * プレビュータブがアクティブ化されたときの処理をします。
-     */
-    async activate() {
-        super.activate();
-        const previewHTML = this.getValue();
-        await this.messageAgent.postMessage({
-            target: window.parent,
-            targetOrigin: ChatGPTUtils.ORIGIN,
-            message: {
-                runtimeId: chrome.runtime.id,
-                key: MSG_KEY_EC.TabChangedEvent,
-                subKey: "preview",
-                message: previewHTML,
-            },
-        });
+  /**
+   * プレビュータブがアクティブ化されたときの処理をします。
+   */
+  async activate(): Promise<void> {
+    super.activate();
+    const previewHTML = this.getValue();
+
+    try {
+      await this.messageAgent.postMessage(window.parent, ChatGPTUtils.ORIGIN, MSG_CHANNEL.TabChangedEvent, {
+        runtimeId: chrome.runtime.id,
+        key: PREFIEXED_LANGUAGE.PREVIEW,
+        message: previewHTML,
+      });
+    } catch (error) {
+      throw new AlertNamedError(MSG_CHANNEL.TabChangedEvent, error);
     }
+  }
 }

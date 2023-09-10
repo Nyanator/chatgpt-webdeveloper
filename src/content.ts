@@ -1,118 +1,75 @@
 /**
- * @file コンテンツスクリプト
+ * コンテンツスクリプトエントリーポイント
  * Chrome拡張はコンテンツ、バッググラウンド、フレーム(iframe)等のコンテキストで実行されます。
  * DOMへのアクセスはウェブページに挿入されるコンテンツスクリプトが担います。
  */
 import {
-    AESCryptoAgent,
-    ConsoleLogger,
-    CryptoAgent,
-    EXT_ORIGIN,
-    MessageData,
-    MessageValidatorImpl,
-    MessageValidatorManager,
-    MessageValidatorManagerConfig,
-    MessageValidatorManagerImpl,
-    RuntimeMessageAgent,
-    RuntimeMessageAgentImpl,
-    SessionStaticKey,
-    SessionStaticToken,
-    WindowMessageAgent,
-    WindowMessageAgentImpl,
-    appendElementToHead,
-    htmlTextToHtmlElement,
-    loadResourceText,
+  EXT_ORIGIN,
+  ElementLoader,
+  ErrorObserver,
+  appendElementToHead,
+  appendStyleTextToHead,
+  htmlTextToHtmlElement,
+  initializeDIContainer,
+  loadResourceText,
+  reserveLoadedAction,
 } from "@nyanator/chrome-ext-utils";
-
 import { container } from "tsyringe";
-//import "./preview/html-preview";
-import { ContentToEditorMessageSender } from "./interfaces/content-to-editor-message-sender";
+
+import { EditorElement, EditorElementsMap } from "./editor-element";
+import { HTMLPreview } from "./preview/html-preview";
 import { ORIGIN } from "./utils/chat-gpt-utils";
 
-export class ContentScript {
-    /**
-     * コンテンツスクリプトを初期化します。
-     */
-    async initialize(): Promise<void> {
-        container.register("Logger", {
-            useClass: ConsoleLogger,
-        });
+initializeDIContainer({
+  allowedOrigins: [EXT_ORIGIN, ORIGIN],
+});
 
-        container.register("SessionStaticToken", {
-            useClass: SessionStaticToken,
-        });
+// グローバルエラー監視を有効に
+const errorObserver = container.resolve<ErrorObserver>("ErrorObserver");
+errorObserver.observe();
 
-        container.register("SessionStaticKey", {
-            useClass: SessionStaticKey,
-        });
+reserveLoadedAction(document, async () => {
+  await resolveEditorElementDependency();
+  await resolveHTMLPreviewDependency();
+});
 
-        container.register("MessageValidatorConfig", {
-            useValue: {
-                runtimeId: chrome.runtime.id,
-                allowedOrigins: [ORIGIN, EXT_ORIGIN],
-            },
-        });
+/** エディター要素の依存関係を解決します */
+async function resolveEditorElementDependency() {
+  // CSSやスタイルの設定
+  const EDITOR_ELEMENT_CSS = "editor-element.css";
+  const cssText = await loadResourceText(EDITOR_ELEMENT_CSS);
+  appendStyleTextToHead(document.body, cssText);
 
-        container.register<CryptoAgent<MessageData>>("CryptoAgent", {
-            useClass: AESCryptoAgent<MessageData>,
-        });
+  const STYLES_HTML = "chat-gpt-styles.html";
+  const htmlStylesText = await loadResourceText(STYLES_HTML);
+  const htmlStyles = htmlTextToHtmlElement(htmlStylesText);
 
-        container.register<MessageValidatorImpl<MessageData>>(
-            "MessageValidator",
-            {
-                useClass: MessageValidatorImpl<MessageData>,
-            },
-        );
-
-        container.register<MessageValidatorManagerConfig>(
-            "MessageValidatorManagerConfig",
-            {
-                useValue: {
-                    maxMessageValidators: 3,
-                    validatorRefreshInterval: 1,
-                },
-            },
-        );
-
-        container.register<RuntimeMessageAgent<MessageData>>(
-            "RuntimeMessageAgent",
-            {
-                useClass: RuntimeMessageAgentImpl,
-            },
-        );
-
-        container.registerSingleton<MessageValidatorManager<MessageData>>(
-            "MessageValidatorManager",
-            MessageValidatorManagerImpl<MessageData>,
-        );
-
-        container.register<WindowMessageAgent<MessageData>>(
-            "WindowMessageAgent",
-            {
-                useClass: WindowMessageAgentImpl,
-            },
-        );
-
-        const test = container.resolve(ContentToEditorMessageSender);
+  const elementsToAppend = htmlStyles.querySelectorAll("link, style");
+  elementsToAppend.forEach((element) => {
+    if (element instanceof HTMLElement) {
+      appendElementToHead(document.body, element);
     }
+  });
 
-    /**
-     * Chat GPTのウェブサイトにhtmlファイルからスタイルやリンクを挿入
-     */
-    async appendLinkAndStyles(): Promise<void> {
-        const htmlStylesText = await loadResourceText("chat-gpt-styles.html");
-        const htmlStyles = htmlTextToHtmlElement(htmlStylesText);
+  // エディターを読み込み
+  const EDITOR_ELEMENT_HTML = "editor-element.html";
+  const loader = new ElementLoader(EditorElementsMap);
+  await loader.loadFromURL(EDITOR_ELEMENT_HTML);
 
-        const elementsToAppend = htmlStyles.querySelectorAll("link, style");
-        elementsToAppend.forEach((element) => {
-            if (element instanceof HTMLElement) {
-                appendElementToHead(document.documentElement, element);
-            }
-        });
-    }
+  const CODE_EDITOR_TABS_HTML = "code-editor-tabs.html";
+  loader.elements.editor.src = chrome.runtime.getURL(CODE_EDITOR_TABS_HTML);
+
+  container.registerInstance("EditorElementsMap", loader.elements);
+  container.registerSingleton("EditorElement", EditorElement);
+  const editor = container.resolve<EditorElement>("EditorElement");
+
+  editor.initialize(CODE_EDITOR_TABS_HTML);
+
+  document.body.appendChild(loader.elements.wrap);
 }
 
-// reserveLoadedAction(document, async () => {
-//     const contentScript = new ContentScript();
-//     contentScript.initialize();
-// });
+/** HTMLプレビューの依存関係を解決します */
+async function resolveHTMLPreviewDependency() {
+  container.registerSingleton("HTMLPreview", HTMLPreview);
+  container.resolve<HTMLPreview>("HTMLPreview");
+}
