@@ -46,23 +46,23 @@ export class EditorElement {
    * 初期化処理。
    * @param codeEditorTabPath コードエディタータブのパス
    */
-  readonly initialize = (codeEditorTabPath: string): void => {
+  initialize(codeEditorTabPath: string): void {
     this.elements.editor.addEventListener("load", () => this.editorLoaded(codeEditorTabPath));
-    this.windowMessageAgent.addListener(MSG_CHANNEL.TabChangedEvent, this.changeTab);
-    this.windowMessageAgent.addListener(MSG_CHANNEL.ClipboardSave, this.saveClipboard);
-    this.windowMessageAgent.addListener(MSG_CHANNEL.DatabaseSave, this.saveEditorData);
+    this.windowMessageAgent.addListener(MSG_CHANNEL.TabChangedEvent, this.changeTab.bind(this));
+    this.windowMessageAgent.addListener(MSG_CHANNEL.ClipboardSave, this.saveClipboard.bind(this));
+    this.windowMessageAgent.addListener(MSG_CHANNEL.DatabaseSave, this.saveEditorData.bind(this));
 
-    this.elements.header.addEventListener("dblclick", this.toggleEditor);
-    this.elements.copyCodeButton.addEventListener("click", this.postClipboardRequest);
+    this.elements.header.addEventListener("dblclick", this.toggleEditor.bind(this));
+    this.elements.copyCodeButton.addEventListener("click", this.postClipboardRequest.bind(this));
 
-    document.addEventListener("click", this.postTabUpdateRequest);
-  };
+    document.addEventListener("click", this.postTabUpdateRequest.bind(this));
+  }
 
   /**
    * エディターロード時処理。
    * @param codeEditorTabPath コードエディタータブのパス
    */
-  readonly editorLoaded = async (codeEditorTabPath: string): Promise<void> => {
+  async editorLoaded(codeEditorTabPath: string): Promise<void> {
     // コードエディターの言語の数を取得したいがiframe側にありセキュリティ上要素が見れない
     const htmlText = await loadResourceText(codeEditorTabPath);
     const codeEditorTab = htmlTextToHtmlElement(htmlText);
@@ -77,9 +77,7 @@ export class EditorElement {
       let loadData;
       try {
         loadData = await this.runtimeMessageAgent.sendMessage(MSG_CHANNEL.DatabaseLoad, {
-          runtimeId: chrome.runtime.id,
           key: languageClass,
-          message: "",
         });
       } catch (error) {
         throw new AlertNamedError(MSG_CHANNEL.DatabaseLoad, error);
@@ -93,7 +91,6 @@ export class EditorElement {
       try {
         const targetWindow = assertNotNull(this.elements.editor.contentWindow);
         await this.windowMessageAgent.postMessage(targetWindow, EXT_ORIGIN, MSG_CHANNEL.DatabaseLoad, {
-          runtimeId: chrome.runtime.id,
           key: loadData.key,
           message: loadData.message,
         });
@@ -102,18 +99,18 @@ export class EditorElement {
       }
     });
     this.elements.loading.remove();
-  };
+  }
 
   /**
    * タブ変更時処理
    * @param messageData プレビュータブのときのhtmlの内容
    */
-  readonly changeTab = (messageData: MessageData): void => {
+  changeTab(messageData: MessageData): void {
     const isPreview = messageData.key === PREFIEXED_LANGUAGE.PREVIEW;
 
     // z-indexでタブを表現
     if (isPreview) {
-      const outerHTML = messageData.message;
+      const outerHTML = messageData?.message ?? "";
       this.elements.preview.srcdoc = outerHTML;
       this.elements.editor.style.transition = "z-index 0.3s ease";
       this.elements.preview.style.transition = "z-index 0.3s ease";
@@ -127,39 +124,38 @@ export class EditorElement {
       this.elements.preview.style.zIndex = "0";
       this.elements.preview.style.opacity = "0";
     }
-  };
+  }
 
   /**
    * バックグランドにエディターのデータを保存します。
    * @param MessageData 書き込むメッセージ
    */
-  readonly saveEditorData = async (messageData: MessageData): Promise<void> => {
+  async saveEditorData(messageData: MessageData): Promise<void> {
     // バックグラウンドにデータの保存を要求
     try {
       await this.runtimeMessageAgent.sendMessage(MSG_CHANNEL.DatabaseSave, {
-        runtimeId: chrome.runtime.id,
         key: messageData.key,
         message: messageData.message,
       });
     } catch (error) {
       throw new AlertNamedError(MSG_CHANNEL.DatabaseSave, error);
     }
-  };
+  }
 
   /**
    * クリップボードにテキストを書き込みます。
    * @param MessageData 書き込むメッセージ
    */
-  readonly saveClipboard = async (messageData: MessageData): Promise<void> => {
+  async saveClipboard(messageData: MessageData): Promise<void> {
     try {
-      await navigator.clipboard.writeText(messageData.message);
+      await navigator.clipboard.writeText(messageData?.message ?? "");
     } catch (error) {
       throw new AlertNamedError(MSG_CHANNEL.ClipboardSave, error);
     }
-  };
+  }
 
   /** エディターを開閉します。 */
-  readonly toggleEditor = (): void => {
+  toggleEditor(): void {
     if (this.elements.editor.style.display === "none") {
       this.elements.editor.style.display = "block";
       this.elements.preview.style.display = "block";
@@ -168,29 +164,26 @@ export class EditorElement {
 
     this.elements.editor.style.display = "none";
     this.elements.preview.style.display = "none";
-  };
+  }
 
   /** エディターフレームにクリップボード用のデータ取得を要求 */
-  readonly postClipboardRequest = async (): Promise<void> => {
+  async postClipboardRequest(): Promise<void> {
     this.toggleAnimation(true);
     setTimeout(() => this.toggleAnimation(false), 2000);
 
     try {
       const targetWindow = assertNotNull(this.elements.editor.contentWindow);
-      await this.windowMessageAgent.postMessage(targetWindow, EXT_ORIGIN, MSG_CHANNEL.ClipboardSave, {
-        runtimeId: chrome.runtime.id,
-        message: "",
-      });
+      await this.windowMessageAgent.postMessage(targetWindow, EXT_ORIGIN, MSG_CHANNEL.ClipboardSave);
     } catch (error) {
       throw new AlertNamedError(MSG_CHANNEL.ClipboardSave, error);
     }
-  };
+  }
 
   /**
    * エディターフレームにタブ更新を要求します。
    * @param event MouseEvent
    */
-  readonly postTabUpdateRequest = async (event: MouseEvent): Promise<void> => {
+  async postTabUpdateRequest(event: MouseEvent): Promise<void> {
     const codeElement = ChatGPTUtils.findCodeElementFromClickElement(event);
     if (!codeElement) {
       return;
@@ -204,20 +197,19 @@ export class EditorElement {
     try {
       const targetWindow = assertNotNull(this.elements.editor.contentWindow);
       await this.windowMessageAgent.postMessage(targetWindow, EXT_ORIGIN, MSG_CHANNEL.TabUpdate, {
-        runtimeId: chrome.runtime.id,
         key: languageClass,
         message: codeElement.textContent ?? "",
       });
     } catch (error) {
       throw new AlertNamedError(MSG_CHANNEL.TabUpdate, error);
     }
-  };
+  }
 
   /**
    * Copy Codeボタンのアニメーション効果
    * @param activate コピー中=true,コピー完了false
    */
-  readonly toggleAnimation = (activate: boolean): void => {
+  toggleAnimation(activate: boolean): void {
     const style = (elem: SVGPathElement | HTMLSpanElement, value: string) => (elem.style.display = value);
 
     const displayValues = activate
@@ -233,10 +225,10 @@ export class EditorElement {
     ].forEach((elem, index) => {
       style(elem, displayValues[index]);
     });
-  };
+  }
 
   /** エディターのドラッグ、リサイズ設定。*/
-  readonly intaractionSetting = (): void => {
+  intaractionSetting(): void {
     // ドラッグ、リサイズ中にmonaco editorが反応しないように設定
     const pointerDisable = () => {
       this.elements.editor.style.pointerEvents = "none";
@@ -250,5 +242,5 @@ export class EditorElement {
 
     InteractJsUtils.draggableSetting(this.elements.header, this.elements.wrap, pointerDisable, pointerEnable);
     InteractJsUtils.resizableSetting(this.elements.wrap, pointerDisable, pointerEnable);
-  };
+  }
 }

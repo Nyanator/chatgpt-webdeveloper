@@ -66,7 +66,7 @@ export class HTMLPreview {
   /**
    * HTML プレビューを描画します
    */
-  readonly renderHtmlPreview = (codeElement: HTMLElement): void => {
+  renderHtmlPreview(codeElement: HTMLElement): void {
     const codeBlockDiv = ChatGPTUtils.findCodeBlockDivFromCodeElement(codeElement);
     if (
       !(codeBlockDiv instanceof HTMLDivElement) ||
@@ -107,12 +107,12 @@ export class HTMLPreview {
     } else {
       codeBlockDiv.parentElement.appendChild(previewElement.wrapDiv);
     }
-  };
+  }
 
   /**
    * 描画領域から外れた HTML プレビューを削除します
    */
-  readonly removeHtmlPreview = (codeElement: HTMLElement): void => {
+  removeHtmlPreview(codeElement: HTMLElement): void {
     const codeBlockDiv = ChatGPTUtils.findCodeBlockDivFromCodeElement(codeElement);
 
     const previewWrapDiv = codeBlockDiv?.parentElement?.querySelector("." + HTMLPreviewCreater.MYCLASS);
@@ -121,12 +121,12 @@ export class HTMLPreview {
     }
 
     previewWrapDiv.remove();
-  };
+  }
 
   /**
    * DOM の変更を監視し、必要に応じて監視を予約します
    */
-  readonly checkMutationAndRserveObserve = (mutationsList: MutationRecord[]): void => {
+  checkMutationAndRserveObserve(mutationsList: MutationRecord[]): void {
     const addNodes = mutationsList.flatMap((ml) => Array.from(ml.addedNodes));
     // ボディ内にボタンが存在する可能性があるため、HTML 要素のみをフィルタリング
     const htmlElements = addNodes
@@ -154,13 +154,13 @@ export class HTMLPreview {
       this.codeBlockEnded = true;
       this.reserveObeserve();
     }
-  };
+  }
 
   /**
    * 指定したElementの親のPreから見たHTMLウインドウを表示します。
    * @param targetElement HTML要素
    */
-  readonly showHTMLWindow = async (targetElement: HTMLElement): Promise<void> => {
+  async showHTMLWindow(targetElement: HTMLElement): Promise<void> {
     const preElement = findParentPreElement(targetElement);
     if (!preElement) {
       return;
@@ -173,15 +173,14 @@ export class HTMLPreview {
 
     // バックグラウンドに通知
     await this.runtimeMessageAgent.sendMessage(MSG_CHANNEL.ShowPreview, {
-      runtimeId: chrome.runtime.id,
       message: codeElement.textContent ?? "",
     });
-  };
+  }
 
   /**
    * オブザーバーの再設定を予約します。
    */
-  readonly reserveObeserve = (): void => {
+  reserveObeserve(): void {
     this.intersectionObserver.disconnect();
 
     // Chrome 拡張機能の読み込み完了後の処理
@@ -190,25 +189,25 @@ export class HTMLPreview {
       this.addClickListenerNewChatButton();
       this.observeIntersectionTarget();
     });
-  };
+  }
 
   /**
    * フォームの z-index を設定して表示崩れを防ぎます。
    */
-  readonly setFormZIndex = (): void => {
+  setFormZIndex(): void {
     const formDiv = ChatGPTUtils.findInputForm();
     if (!formDiv) {
       return;
     }
 
     formDiv.style.zIndex = "2147483647"; // z-indexの最大値
-  };
+  }
 
   /**
    * New chatボタンにクリックイベントを設定します。
    * ボタンが連続して使用される場合、URL の遷移が発生しないためです。
    */
-  readonly addClickListenerNewChatButton = (): void => {
+  addClickListenerNewChatButton(): void {
     const newChatButton = ChatGPTUtils.findNewChatButton();
     if (!newChatButton) {
       return;
@@ -216,12 +215,12 @@ export class HTMLPreview {
     newChatButton.addEventListener("click", () => {
       this.reserveObeserve();
     });
-  };
+  }
 
   /**
    * コード要素を監視する Intersection Observer を作成します。
    */
-  readonly observeIntersectionTarget = async (): Promise<void> => {
+  async observeIntersectionTarget(): Promise<void> {
     await new Promise<void>((resolve) => {
       window.requestIdleCallback(
         () => {
@@ -235,5 +234,5 @@ export class HTMLPreview {
         { timeout: 3000 },
       );
     });
-  };
+  }
 }

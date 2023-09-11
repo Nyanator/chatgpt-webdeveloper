@@ -113,10 +113,7 @@ export class MonacoEditorTab extends Tab {
     super.activate();
 
     try {
-      await this.messageAgent.postMessage(window.parent, ChatGPTUtils.ORIGIN, MSG_CHANNEL.TabChangedEvent, {
-        runtimeId: chrome.runtime.id,
-        message: "tab changed",
-      });
+      await this.messageAgent.postMessage(window.parent, ChatGPTUtils.ORIGIN, MSG_CHANNEL.TabChangedEvent);
     } catch (error) {
       throw new AlertNamedError(MSG_CHANNEL.TabChangedEvent, error);
     }
@@ -148,7 +145,6 @@ export class MonacoEditorTab extends Tab {
 
     try {
       await this.messageAgent.postMessage(window.parent, ChatGPTUtils.ORIGIN, MSG_CHANNEL.DatabaseSave, {
-        runtimeId: chrome.runtime.id,
         key: this.language,
         message: codeText,
       });

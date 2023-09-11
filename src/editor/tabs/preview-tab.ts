@@ -64,7 +64,6 @@ export class PreviewTab extends Tab {
 
     try {
       await this.messageAgent.postMessage(window.parent, ChatGPTUtils.ORIGIN, MSG_CHANNEL.TabChangedEvent, {
-        runtimeId: chrome.runtime.id,
         key: PREFIEXED_LANGUAGE.PREVIEW,
         message: previewHTML,
       });

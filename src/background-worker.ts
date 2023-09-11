@@ -24,44 +24,44 @@ export class BackgroundWorker {
   ) {}
 
   /** 初期化処理。*/
-  readonly initialize = async (): Promise<void> => {
+  async initialize(): Promise<void> {
     await this.openDatabase();
 
     // イベントやメッセージのハンドラを設定
-    this.messageAgent.addListener(MSG_CHANNEL.DatabaseSave, this.saveData);
-    this.messageAgent.addListener(MSG_CHANNEL.DatabaseLoad, this.loadData);
-    this.messageAgent.addListener(MSG_CHANNEL.ShowPreview, this.showPreview);
-    chrome.tabs.onUpdated.addListener(this.handleTabUpdate);
-  };
+    this.messageAgent.addListener(MSG_CHANNEL.DatabaseSave, this.saveData.bind(this));
+    this.messageAgent.addListener(MSG_CHANNEL.DatabaseLoad, this.loadData.bind(this));
+    this.messageAgent.addListener(MSG_CHANNEL.ShowPreview, this.showPreview.bind(this));
+    chrome.tabs.onUpdated.addListener(this.handleTabUpdate.bind(this));
+  }
 
   /** データベースを開きます。*/
-  readonly openDatabase = async (): Promise<void> => {
+  async openDatabase(): Promise<void> {
     try {
       await this.databaseAgent.open();
     } catch (error) {
       throw new AlertNamedError(MSG_CHANNEL.DatabaseOpen, error);
     }
-  };
+  }
 
   /**
    * データベースへ保存します。
    * @param messageData 保存要求
    */
-  readonly saveData = async (messageData: MessageData): Promise<void> => {
+  async saveData(messageData: MessageData): Promise<void> {
     try {
       const key = assertNotNull(messageData.key);
       await this.databaseAgent.save(key, messageData.message);
     } catch (error) {
       throw new AlertNamedError(MSG_CHANNEL.DatabaseSave, error);
     }
-  };
+  }
 
   /**
    * データベースから読み込みます。
    * @param messageData 読み込み要求
    * @returns 読み込んだデータ
    */
-  readonly loadData = async (messageData: MessageData): Promise<MessageData | undefined> => {
+  async loadData(messageData: MessageData): Promise<MessageData | undefined> {
     try {
       const key = assertNotNull(messageData.key);
       const result = (await this.databaseAgent.get(key)) || "";
@@ -77,23 +77,23 @@ export class BackgroundWorker {
     } catch (error) {
       throw new AlertNamedError(MSG_CHANNEL.DatabaseLoad, error);
     }
-  };
+  }
 
   /**
    * HTMLプレビューウィンドウを表示します。
    * @param messageData ウィンドウの表示要求
    */
-  readonly showPreview = (messageData: MessageData): void => {
+  showPreview(messageData: MessageData): void {
     const HTML_WINDOW_WIDTH = 600;
     const HTML_WINDOW_HEIGHT = 600;
 
     chrome.windows.create({
-      url: "data:text/html;charset=utf-8," + encodeURIComponent(messageData.message),
+      url: "data:text/html;charset=utf-8," + encodeURIComponent(messageData?.message ?? ""),
       width: HTML_WINDOW_WIDTH,
       height: HTML_WINDOW_HEIGHT,
       type: "panel",
     });
-  };
+  }
 
   /**
    * URL変更イベントをコンテンツスクリプトへ送信します。
@@ -101,11 +101,7 @@ export class BackgroundWorker {
    * @param changeInfo 変更情報
    * @param tab タブ
    */
-  readonly handleTabUpdate = async (
-    tabId: number,
-    changeInfo: chrome.tabs.TabChangeInfo,
-    tab: chrome.tabs.Tab,
-  ): Promise<void> => {
+  async handleTabUpdate(tabId: number, changeInfo: chrome.tabs.TabChangeInfo, tab: chrome.tabs.Tab): Promise<void> {
     if (!tab.active || !changeInfo.url) {
       return;
     }
@@ -116,16 +112,9 @@ export class BackgroundWorker {
     }
 
     try {
-      await this.messageAgent.sendMessage(
-        MSG_CHANNEL.URLUpdated,
-        {
-          runtimeId: chrome.runtime.id,
-          message: "",
-        },
-        tabId,
-      );
+      await this.messageAgent.sendMessage(MSG_CHANNEL.URLUpdated, {}, tabId);
     } catch (error) {
       throw new AlertNamedError(MSG_CHANNEL.URLUpdated, error);
     }
-  };
+  }
 }

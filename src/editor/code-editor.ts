@@ -11,7 +11,6 @@ import {
 import { container } from "tsyringe";
 
 import { ORIGIN } from "../utils/chat-gpt-utils";
-import { MSG_CHANNEL } from "../utils/msg-def";
 
 import { CodeEditorTab } from "./code-editor-tabs";
 
@@ -31,10 +30,5 @@ reserveLoadedAction(document, async () => {
 async function resolveCodeEditorTabDependency() {
   container.registerSingleton("CodeEditorTab", CodeEditorTab);
   const editor = container.resolve<CodeEditorTab>("CodeEditorTab");
-  editor.createTabs();
-
-  // イベントハンドラを設定
-  editor.messageAgent.addListener(MSG_CHANNEL.ClipboardSave, editor.saveClipboard);
-  editor.messageAgent.addListener(MSG_CHANNEL.DatabaseLoad, editor.setTabData);
-  editor.messageAgent.addListener(MSG_CHANNEL.TabUpdate, editor.updateTab);
+  editor.initialize();
 }

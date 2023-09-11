@@ -24,10 +24,20 @@ export class CodeEditorTab {
 
   constructor(@inject("WindowMessageAgent") readonly messageAgent: WindowMessageAgent) {}
 
+  /** 初期化処理。 */
+  initialize(): void {
+    this.createTabs();
+
+    // イベントハンドラを設定
+    this.messageAgent.addListener(MSG_CHANNEL.ClipboardSave, this.saveClipboard.bind(this));
+    this.messageAgent.addListener(MSG_CHANNEL.DatabaseLoad, this.setTabData.bind(this));
+    this.messageAgent.addListener(MSG_CHANNEL.TabUpdate, this.updateTab.bind(this));
+  }
+
   /**
    * タブを生成してイベントを設定します。
    */
-  readonly createTabs = (): void => {
+  createTabs(): void {
     // DOM要素を取得
     const headerElement = document.querySelector<HTMLElement>(".header");
     const contentElement = document.querySelector<HTMLElement>(".content");
@@ -85,13 +95,13 @@ export class CodeEditorTab {
       });
       index++;
     });
-  };
+  }
 
   /**
    * 指定されたタブをアクティブにします。
    * @param activateTab アクティブにするタブ
    */
-  readonly activateTab = (activateTab: Tab): void => {
+  activateTab(activateTab: Tab): void {
     this.tabObjects.forEach((tab) => {
       if (activateTab === tab) {
         tab.activate();
@@ -99,28 +109,28 @@ export class CodeEditorTab {
       }
       tab.deactivate();
     });
-  };
+  }
 
   /** クリップボードの保存イベント。*/
-  readonly saveClipboard = async (): Promise<void> => {
+  async saveClipboard(): Promise<void> {
     const activeTab = this.tabObjects.find((tab) => tab.isActive());
     await activeTab?.saveClipboard();
-  };
+  }
 
   /**
    * タブにデータを設定します。
    * @param messageData メッセージ通知
    */
-  readonly setTabData = async (messageData: MessageData): Promise<void> => {
+  async setTabData(messageData: MessageData): Promise<void> {
     const editor = this.editors.get(assertNotNull(messageData.key));
     editor?.setValue(messageData.message);
-  };
+  }
 
   /**
    * タブにデータを設定します。
    * @param messageData メッセージ通知
    */
-  readonly updateTab = async (messageData: MessageData): Promise<void> => {
+  async updateTab(messageData: MessageData): Promise<void> {
     // エディターへのメッセージ反映とタブの更新処理
     const editor = this.editors.get(assertNotNull(messageData.key));
     editor?.setValue(messageData.message);
@@ -128,12 +138,11 @@ export class CodeEditorTab {
     this.activateTab(editor);
     try {
       await this.messageAgent.postMessage(window.parent, EXT_ORIGIN, MSG_CHANNEL.DatabaseSave, {
-        runtimeId: chrome.runtime.id,
         key: messageData.key,
         message: messageData.message,
       });
     } catch (error) {
       throw new AlertNamedError(MSG_CHANNEL.DatabaseSave, error);
     }
-  };
+  }
 }

@@ -60,7 +60,6 @@ export abstract class Tab {
 
     try {
       await this.messageAgent.postMessage(window.parent, ChatGPTUtils.ORIGIN, MSG_CHANNEL.ClipboardSave, {
-        runtimeId: chrome.runtime.id,
         message: saveText,
       });
     } catch (error) {

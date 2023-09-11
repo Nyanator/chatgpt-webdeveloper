@@ -8,7 +8,7 @@
       "all_frames": true,
       "js": ["content.js"],
       "matches": ["https://chat.openai.com/*"],
-      "run_at": "document_end"
+      "run_at": "document_start"
     }
   ],
   "description": "Web Develop Tools for ChatGPT",
