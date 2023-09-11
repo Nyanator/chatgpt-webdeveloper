@@ -61,6 +61,15 @@ export class HTMLPreview {
         this.reserveObeserve();
       });
     });
+
+    // Ctrl + ダブルクリックでプレビュー表示
+    document.addEventListener("dblclick", (event) => {
+      if (!event.ctrlKey || !(event.target instanceof HTMLElement)) {
+        return;
+      }
+
+      this.showHTMLWindow(event.target);
+    });
   }
 
   /**
@@ -68,10 +77,7 @@ export class HTMLPreview {
    */
   renderHtmlPreview(codeElement: HTMLElement): void {
     const codeBlockDiv = ChatGPTUtils.findCodeBlockDivFromCodeElement(codeElement);
-    if (
-      !(codeBlockDiv instanceof HTMLDivElement) ||
-      !(codeBlockDiv.parentElement instanceof HTMLPreElement)
-    ) {
+    if (!(codeBlockDiv instanceof HTMLDivElement) || !(codeBlockDiv.parentElement instanceof HTMLPreElement)) {
       return;
     }
 
@@ -95,11 +101,7 @@ export class HTMLPreview {
     this.codeBlockEnded = false;
     codeBlockDiv.parentElement.style.overflowY = "hidden";
 
-    const previewElement = HTMLPreviewCreater.createPreviewElement(
-      codeBlockDiv,
-      allowScripts,
-      previewHtml.outerHTML,
-    );
+    const previewElement = HTMLPreviewCreater.createPreviewElement(codeBlockDiv, allowScripts, previewHtml.outerHTML);
 
     // アニメーション効果のための z-index の重ね合わせ
     if (oldPreviewWrapDiv) {

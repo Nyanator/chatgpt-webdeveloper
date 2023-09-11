@@ -38,15 +38,14 @@ export class EditorElement {
     @inject("EditorElementsMap") readonly elements: ElementMap<typeof EditorElementsMap>,
     @inject("RuntimeMessageAgent") readonly runtimeMessageAgent: RuntimeMessageAgent,
     @inject("WindowMessageAgent") readonly windowMessageAgent: WindowMessageAgent,
-  ) {
-    this.intaractionSetting();
-  }
+  ) {}
 
   /**
    * 初期化処理。
    * @param codeEditorTabPath コードエディタータブのパス
    */
   initialize(codeEditorTabPath: string): void {
+    this.intaractionSetting();
     this.elements.editor.addEventListener("load", () => this.editorLoaded(codeEditorTabPath));
     this.windowMessageAgent.addListener(MSG_CHANNEL.TabChangedEvent, this.changeTab.bind(this));
     this.windowMessageAgent.addListener(MSG_CHANNEL.ClipboardSave, this.saveClipboard.bind(this));
