@@ -1,11 +1,7 @@
 /**
  * @file HTML プレビューを生成するためのユーティリティ関数とクラスを提供します。
  */
-import {
-  documentHeight,
-  maxZIndex,
-  totalHeight,
-} from "@nyanator/chrome-ext-utils";
+import { documentHeight, maxZIndex, totalHeight } from "@nyanator/chrome-ext-utils";
 
 /** クラス名の定義 */
 export const MYCLASS = "HTMLPreviewCreaterMyClass";
@@ -13,20 +9,11 @@ export const MYCLASS = "HTMLPreviewCreaterMyClass";
 /**
  * プレビューを生成し、インスタンスを返します。
  * @param codeBlockDiv プレビュー対象のコードブロックの div 要素
- * @param allowScripts スクリプトの実行を許可するかどうか
  * @param outerHTML プレビューするコードブロックの HTML 文字列
  * @returns プレビューエレメントのインスタンス
  */
-export const createPreviewElement = (
-  codeBlockDiv: HTMLDivElement,
-  allowScripts: boolean,
-  outerHTML: string,
-): HTMLPreviewElement => {
-  const hTMLPreviewElement = new HTMLPreviewElement(
-    codeBlockDiv,
-    allowScripts,
-    outerHTML,
-  );
+export const createPreviewElement = (codeBlockDiv: HTMLDivElement, outerHTML: string): HTMLPreviewElement => {
+  const hTMLPreviewElement = new HTMLPreviewElement(codeBlockDiv, outerHTML);
   return hTMLPreviewElement;
 };
 
@@ -41,18 +28,13 @@ export class HTMLPreviewElement {
   /**
    * HTML プレビューエレメントのインスタンスを生成します。
    * @param codeBlockDiv プレビュー対象のコードブロックの div 要素
-   * @param allowScripts スクリプトの実行を許可するかどうか
    * @param outerHTML プレビューするコードブロックの HTML 文字列
    */
-  constructor(
-    codeBlockDiv: HTMLDivElement,
-    allowScripts: boolean,
-    outerHTML: string,
-  ) {
+  constructor(codeBlockDiv: HTMLDivElement, outerHTML: string) {
     // ラップする要素を生成および設定
     this.wrapDiv = createWrapDiv();
     this.previewDiv = createPreviewDiv(codeBlockDiv);
-    this.previewFrame = createPreviewFrame(allowScripts, outerHTML);
+    this.previewFrame = createPreviewFrame(outerHTML);
 
     // プレビューフレームの読み込みイベントの設定
     this.previewFrameLoadSetting();
@@ -75,18 +57,13 @@ export class HTMLPreviewElement {
       if (
         !(this.previewFrame instanceof HTMLIFrameElement) ||
         !(this.previewFrame.parentElement instanceof HTMLDivElement) ||
-        !(
-          this.previewFrame.parentElement.parentElement instanceof
-          HTMLDivElement
-        )
+        !(this.previewFrame.parentElement.parentElement instanceof HTMLDivElement)
       ) {
         return;
       }
 
       // プレビューフレームの高さを調整
-      let iframeHeight = documentHeight(
-        this.previewFrame.contentWindow.document,
-      );
+      let iframeHeight = documentHeight(this.previewFrame.contentWindow.document);
       // プレビューが高さ 0 のままの場合、仮に 600 に設定
       if (iframeHeight === 0) {
         iframeHeight = 600;
@@ -94,25 +71,16 @@ export class HTMLPreviewElement {
       this.previewFrame.style.height = iframeHeight + "px";
 
       // 子要素の総高さを計算
-      const calcedHeight =
-        totalHeight(this.previewFrame.parentElement) -
-        this.previewFrame.offsetHeight;
+      const calcedHeight = totalHeight(this.previewFrame.parentElement) - this.previewFrame.offsetHeight;
 
       // absolute な要素をサイズ計算から除外するために padding-bottom を設定
-      const zIndex =
-        maxZIndex(this.previewFrame.parentElement.parentElement) + 1;
+      const zIndex = maxZIndex(this.previewFrame.parentElement.parentElement) + 1;
       this.previewFrame.parentElement.style.zIndex = zIndex.toString();
-      this.previewFrame.parentElement.parentElement.style.paddingBottom =
-        iframeHeight + calcedHeight + "px";
+      this.previewFrame.parentElement.parentElement.style.paddingBottom = iframeHeight + calcedHeight + "px";
 
       // 不要な iframe を削除
-      Array.from(
-        this.previewFrame.parentElement.parentElement.children,
-      ).forEach((child) => {
-        if (
-          !(child instanceof HTMLElement) ||
-          child.style.zIndex === zIndex.toString()
-        ) {
+      Array.from(this.previewFrame.parentElement.parentElement.children).forEach((child) => {
+        if (!(child instanceof HTMLElement) || child.style.zIndex === zIndex.toString()) {
           return;
         }
         child.remove();
@@ -178,23 +146,15 @@ function createPreviewKind(previewDiv: HTMLElement) {
 
 /**
  * プレビューフレーム（iframe）要素を生成します。
- * @param allowScripts スクリプトの実行を許可するかどうか
  * @param outerHTML プレビューするコードブロックの HTML 文字列
  * @returns プレビューフレーム（iframe）要素
  */
-function createPreviewFrame(
-  allowScripts: boolean,
-  outerHTML: string,
-): HTMLIFrameElement {
+function createPreviewFrame(outerHTML: string): HTMLIFrameElement {
   const previewFrame = document.createElement("iframe");
   previewFrame.style.height = "0";
   previewFrame.scrolling = "no";
   previewFrame.style.width = "100%";
   previewFrame.setAttribute("loading", "lazy");
-  previewFrame.setAttribute(
-    "sandbox",
-    "allow-same-origin " + (allowScripts ? "allow-scripts" : ""),
-  );
   previewFrame.srcdoc = outerHTML;
 
   return previewFrame;

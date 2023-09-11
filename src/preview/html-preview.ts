@@ -98,10 +98,19 @@ export class HTMLPreview {
         return;
       }
     }
+
     this.codeBlockEnded = false;
     codeBlockDiv.parentElement.style.overflowY = "hidden";
-
-    const previewElement = HTMLPreviewCreater.createPreviewElement(codeBlockDiv, allowScripts, previewHtml.outerHTML);
+    let outerHTML = previewHtml.outerHTML;
+    if (!allowScripts) {
+      outerHTML = outerHTML
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+    const previewElement = HTMLPreviewCreater.createPreviewElement(codeBlockDiv, outerHTML);
 
     // アニメーション効果のための z-index の重ね合わせ
     if (oldPreviewWrapDiv) {

@@ -83,8 +83,6 @@ export const findCodeElementFromClickElement = (event: MouseEvent): Element | nu
  * @param element 要素
  */
 export const extractLanguageClass = (element: Element): string => {
-  const languageClasses = Array.from(element.classList).filter((className) =>
-    className.startsWith(LANGUAGE_PREFIX),
-  );
+  const languageClasses = Array.from(element.classList).filter((className) => className.startsWith(LANGUAGE_PREFIX));
   return languageClasses[0] || "";
 };
